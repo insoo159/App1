@@ -14,7 +14,7 @@ def parse(resp,year,k,s):
         t=str(g.get('PreExeDate') or '')
         out.append({'id':f"{s['p']}{year}{k}{g.get('GameSno')}",'site':s['p'],'y':year,'k':k,'no':g.get('GameSno'),'date':str(g.get('GameDate',''))[:10],'time':t.split('T')[1][:5] if 'T' in t else '',
             'league':s['k'][k],'title':f'{aw} vs {hm}'+(' (延賽/取消)' if stop else ''),'venue':g.get('FieldAbbe',''),
-            'home':hm,'away':aw,'hs':g.get('HomeScore') if fin else None,'as':g.get('VisitingScore') if fin else None})
+            'home':hm,'away':aw,'hs':g.get('HomeScore') if fin else None,'as':g.get('VisitingScore') if fin else None,'wp':g.get('WinningPitcherName','') if fin else '','lp':g.get('LoserPitcherName','') if fin else '','cl':g.get('CloserName','') if fin else '','mv':g.get('MvpName','') if fin else ''})
     return out
 def site(s,y):
     ss=requests.Session();ss.headers.update(H);out=[]
