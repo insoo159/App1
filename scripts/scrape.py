@@ -53,7 +53,7 @@ if __name__=='__main__':
         try: d+=site(s,y)
         except Exception as e: print(s['p'],'FAIL',e)
     d+=wbc(y)
-    d+=json.load(open('events.json',encoding='utf-8'))
+    d=json.load(open('events.json',encoding='utf-8'))+d
     print('total',len(d))
     if not d: print('抓到 0 筆，沒有更新 schedule.json');sys.exit(0)
     json.dump(d,open('schedule.json','w',encoding='utf-8'),ensure_ascii=False,indent=0)
