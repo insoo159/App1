@@ -16,6 +16,7 @@ jobs:
           GAS_KEY: ${{ secrets.GAS_KEY }}
           REPO: ${{ github.repository }}
         run: node -e "require('fs').writeFileSync('www/config.js','window.CFG='+JSON.stringify({gas:process.env.GAS_URL||'',key:process.env.GAS_KEY||'',url:'https://raw.githubusercontent.com/'+process.env.REPO+'/main/schedule.json'}))"
+      - run: node scripts/compat.js
       - run: npx cap add android
       - run: |
           sed -i 's#<application#<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n    <application#' android/app/src/main/AndroidManifest.xml
