@@ -2,8 +2,9 @@ import requests,re,json,datetime,sys
 KINDS={'A':'中職一軍例行賽','B':'中職明星賽','C':'中職總冠軍賽','E':'中職季後挑戰賽','G':'中職熱身賽'}
 ZH={'Chinese Taipei':'中華台北','Taiwan':'中華台北','Japan':'日本','Korea':'韓國','South Korea':'韓國','United States':'美國','USA':'美國','Dominican Republic':'多明尼加','Venezuela':'委內瑞拉','Puerto Rico':'波多黎各','Mexico':'墨西哥','Cuba':'古巴','Canada':'加拿大','Italy':'義大利','Netherlands':'荷蘭','Australia':'澳洲','Panama':'巴拿馬','Colombia':'哥倫比亞','Israel':'以色列','Great Britain':'英國','Czechia':'捷克','Czech Republic':'捷克','Nicaragua':'尼加拉瓜','Brazil':'巴西','China':'中國'}
 z=lambda n:ZH.get(n,n)
-SITES=[{'b':'https://www.cpbl.com.tw','p':'cpbl','cal':[1],'yrs':lambda y:[y,y+1],'lab':lambda k:KINDS[k]},
-       {'b':'https://awb.cpbl.com.tw','p':'awb','cal':[1,11],'yrs':lambda y:[y],'lab':lambda k:'亞洲冬盟'}]
+WA='亞洲冬盟'
+SITES=[{'b':'https://www.cpbl.com.tw','p':'cpbl','cal':[1],'yrs':lambda y:[y,y+1],'k':KINDS},
+       {'b':'https://awb.cpbl.com.tw','p':'awb','cal':[1,11,12],'yrs':lambda y:[y],'k':{'P':WA,'C':WA,'E':WA,'A':WA}}]
 H={'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36','Accept-Language':'zh-TW,zh;q=0.9,en;q=0.8'}
 def parse(resp,year,k,s):
     out=[]
@@ -11,8 +12,8 @@ def parse(resp,year,k,s):
         hm,aw=g.get('HomeTeamName',''),g.get('VisitingTeamName','')
         stop=g.get('IsGameStop')=='1';fin=g.get('PresentStatus')==1 and not stop
         t=str(g.get('PreExeDate') or '')
-        out.append({'id':f"{s['p']}{year}{k}{g.get('GameSno')}",'date':str(g.get('GameDate',''))[:10],'time':t.split('T')[1][:5] if 'T' in t else '',
-            'league':s['lab'](k),'title':f'{aw} vs {hm}'+(' (延賽/取消)' if stop else ''),'venue':g.get('FieldAbbe',''),
+        out.append({'id':f"{s['p']}{year}{k}{g.get('GameSno')}",'site':s['p'],'y':year,'k':k,'no':g.get('GameSno'),'date':str(g.get('GameDate',''))[:10],'time':t.split('T')[1][:5] if 'T' in t else '',
+            'league':s['k'][k],'title':f'{aw} vs {hm}'+(' (延賽/取消)' if stop else ''),'venue':g.get('FieldAbbe',''),
             'home':hm,'away':aw,'hs':g.get('HomeScore') if fin else None,'as':g.get('VisitingScore') if fin else None})
     return out
 def site(s,y):
@@ -25,7 +26,7 @@ def site(s,y):
         if m: tok=tok;break
     print(' token',bool(tok))
     for yr in s['yrs'](y):
-        for k in KINDS:
+        for k in s['k']:
             for mo in s['cal']:
                 try:
                     p=ss.post(s['b']+'/schedule/getgamedatas',data={'calendar':f'{yr}/{mo:02d}/01','location':'','kindCode':k},
