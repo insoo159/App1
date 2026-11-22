@@ -8,10 +8,17 @@ SITES=[{'b':'https://www.cpbl.com.tw','p':'cpbl','cal':[1],'yrs':lambda y:[y,y+1
 H={'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36','Accept-Language':'zh-TW,zh;q=0.9,en;q=0.8'}
 def parse(resp,year,k,s):
     out=[]
-    for g in json.loads(resp.get('GameDatas') or '[]'):
+    gd=resp.get('GameDatas') or '[]'
+    gd=json.loads(gd) if isinstance(gd,str) else gd
+    for g in gd:
         hm,aw=g.get('HomeTeamName',''),g.get('VisitingTeamName','')
         stop=g.get('IsGameStop')=='1';fin=g.get('PresentStatus')==1 and not stop
         t=str(g.get('PreExeDate') or '')
+        if fin and (g.get('HomeScore') is None or g.get('VisitingScore') is None): fin=False
+        if fin and 'T' in t:
+            try:
+                if datetime.datetime.fromisoformat(t)>datetime.datetime.utcnow()+datetime.timedelta(hours=8): fin=False
+            except Exception: pass
         out.append({'id':f"{s['p']}{year}{k}{g.get('GameSno')}",'site':s['p'],'y':year,'k':k,'no':g.get('GameSno'),'date':str(g.get('GameDate',''))[:10],'time':t.split('T')[1][:5] if 'T' in t else '',
             'league':s['k'][k],'title':f'{aw} vs {hm}'+(' (延賽/取消)' if stop else ''),'venue':g.get('FieldAbbe',''),
             'home':hm,'away':aw,'hs':g.get('HomeScore') if fin else None,'as':g.get('VisitingScore') if fin else None,'wp':g.get('WinningPitcherName','') if fin else '','lp':g.get('LoserPitcherName','') if fin else '','cl':g.get('CloserName','') if fin else '','mv':g.get('MvpName','') if fin else ''})
